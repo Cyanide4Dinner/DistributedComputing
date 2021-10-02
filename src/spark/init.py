@@ -39,7 +39,11 @@ zipcodesRDD = loadIntoRDD("zipcodes")
 
 from logic import parseAndExecute
 
-EXAMPLE_SQL = "SELECT age FROM Movies WHERE age > 5"
-parseAndExecute(EXAMPLE_SQL, [moviesRDD, ratingRDD, usersRDD, zipcodesRDD])
+EXAMPLE_SQL = "SELECT age, gender FROM Users WHERE age = 20"
+result = parseAndExecute(EXAMPLE_SQL, [moviesRDD, ratingRDD, usersRDD, zipcodesRDD])
+result = result.collect()
+for row in result:
+    #print(row[0] + ',' + row[1]+ ',' + row[2]+ ',' + row[3]+ ',' + row[4])
+    print(row[0] + ',' + row[1])
 
 print("Hello")
