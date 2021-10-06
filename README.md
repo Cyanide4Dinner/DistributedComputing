@@ -7,10 +7,11 @@
 
 #### Compiling
 - Compiling can be done by `javac -d classes <JAVA_FILES>` in `/src/mapreduce`
-- Compress to JAR using `jar -cvf SQL.jar classes/ .`
+- Compress to JAR using `jar -cvf SQL.jar -C classes/ .`
 
 #### Running
 - Run the docker setup by `docker-compose up -d`.
+- Create a user input folder with `hdfs dfs -mkdir /user/root/input`
 - Copy the JAR file to Namenode's tmp folder using `docker cp <PATH-TO-JAR> namenode:/tmp`.
 - Similarly copy the input files `docker cp <PATH-TO-CSV-FILES> namenode:/tmp`.
 - Execute the following in namenode's shell. Switch to it using `docker exec -it namenode bash`

@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.*;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.*;
@@ -46,6 +47,7 @@ public class WhereMap extends MapReduceBase implements Mapper<LongWritable, Text
 					doesItSatisfy = Integer.parseInt(columnValue) != Integer.parseInt(clause.get(2));
 					break;
 				case "LIKE":
+					doesItSatisfy = Pattern.compile(clause.get(2)).matcher(columnValue).matches();
 					break;
 				case "IN":
 					break;

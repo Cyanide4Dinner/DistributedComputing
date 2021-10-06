@@ -35,8 +35,24 @@ public class SQL {
 		conf.setInputFormat(TextInputFormat.class);
 		conf.setOutputFormat(TextOutputFormat.class);
 		
-		FileInputFormat.setInputPaths(conf, new Path(args[0]));
-		FileOutputFormat.setOutputPath(conf, new Path(args[1]));
+		String tablePath = "/tmp/users.csv";
+		switch(Parser.getTableName(EXAMPLE_SQL)){
+			case "Movies":
+				tablePath = "input/movies.csv";
+				break;
+			case "Users":
+				tablePath = "input/users.csv";
+				break;
+			case "Zipcodes":
+				tablePath = "input/zipcodes.csv";
+				break;
+			case "Rating":
+				tablePath = "input/rating.csv";
+				break;
+		}
+
+		FileInputFormat.setInputPaths(conf, tablePath);
+		FileOutputFormat.setOutputPath(conf, new Path(args[0]));
 
 		JobClient.runJob(conf);
 	}
