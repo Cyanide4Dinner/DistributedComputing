@@ -3,7 +3,7 @@
 - Intall hadoop (preferably in `system/mapreduce` folder)
 - The compilation must happen only in Java 8. Please set the environment to it accordingly.
 - Export the hadoop libraries present in `/system` by changing directory to `/system/mapreduce/hadoop`
-- Then execute the following, "export CLASSPATH="$PWD/share/hadoop/mapreduce/hadoop-mapreduce-client-core-3.3.1.jar:$PWD/share/hadoop/mapreduce/hadoop-mapreduce-client-common-3.3.1.jar:$PWD/share/hadoop/common/hadoop-common-3.3.1.jar:$PWD/lib/*""
+- Then execute the following, `export CLASSPATH="$PWD/share/hadoop/mapreduce/hadoop-mapreduce-client-core-3.3.1.jar:$PWD/share/hadoop/mapreduce/hadoop-mapreduce-client-common-3.3.1.jar:$PWD/share/hadoop/common/hadoop-common-3.3.1.jar:$PWD/lib/*"`
 
 #### Compiling
 - Compiling can be done by `javac -d classes <JAVA_FILES>` in `/src/mapreduce`

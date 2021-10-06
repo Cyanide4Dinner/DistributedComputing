@@ -9,6 +9,9 @@ import org.apache.hadoop.util.*;
 
 public class SQL {
 
+	public static String EXAMPLE_SQL = "SELECT age FROM Users WHERE age > 20";
+
+	/*
 	public static class whereMap extends MapReduceBase implements Mapper<LongWritable, Text, Text, Text> {
 		public void  map(LongWritable key, Text value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
 			String line = value.toString();
@@ -16,15 +19,18 @@ public class SQL {
 			output.collect(new Text(line), new Text(fields.get(2)));
 		}
 	}
+	*/
 
 	public static void main(String[] args) throws Exception {
 		JobConf conf = new JobConf(SQL.class);
 		conf.setJobName("sql");
 
+		conf.set("query", EXAMPLE_SQL);
+
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(Text.class);
 
-		conf.setMapperClass(whereMap.class);
+		conf.setMapperClass(WhereMap.class);
 
 		conf.setInputFormat(TextInputFormat.class);
 		conf.setOutputFormat(TextOutputFormat.class);
