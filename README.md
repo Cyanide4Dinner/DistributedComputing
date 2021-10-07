@@ -44,7 +44,7 @@ Following syntax of SQL are supported:
 - SELECT C1, C2, ... CN FROM Table WHERE CX Operator Value GROUP BY CP, CP+1, ... CQ HAVING CY Operator Value
 - SELECT C1, C2, ... CN, AG FROM Table WHERE CX Operator Value GROUP BY C1, C2, ... CN HAVING AG Operator Value
 - SELECT C1, C2, ... CN, AG FROM Table WHERE CX Operator Value GROUP BY C1, C2, ... CN HAVING CY Operator Value
-- SELECT C1, C2, ... CN, D1, D2 ... DM FROM Table1 WHERE CX Operator Value NATURAL JOIN Table2 ON Column 
+- SELECT C1, C2, ... CN, D1, D2 ... DM FROM Table1 WHERE CX Operator Value NATURAL JOIN Table2
 - SELECT C1, C2, ... CN, D1, D2, ... DM FROM Table1 WHERE CX Operator Value INNER JOIN Table2 ON Table1.Column1 = Table2.Column2
 - SELECT C1, C2, ... CN, D1, D2, ... DM FROM Table1 WHERE CX Operator Value LEFT OUTER JOIN Table2 ON Table1.Column1 = Table2.Column2 
 
