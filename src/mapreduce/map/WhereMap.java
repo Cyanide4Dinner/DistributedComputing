@@ -15,21 +15,10 @@ import org.apache.hadoop.fs.Path;
 
 public class WhereMap extends Mapper<LongWritable, Text, Text, Text> {
 
-	/*
-	@Override 
-	public void configure(JobConf job){
-		super.configure(job);
-		query = job.get("query");
-	} 
-	*/
-	
-	//String query = "SELECT age FROM Users WHERE age > 20";
-
 	public void  map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
 			Configuration conf = context.getConfiguration();
 			String query = conf.get("query");
-			//System.out.println(query2);
 
 			//0 - columnName, 1 - operator, 2 - value
 			ArrayList<String> clause = Parser.getWhere(query); 

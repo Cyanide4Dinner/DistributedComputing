@@ -36,15 +36,6 @@ public class SQL extends Configured implements Tool {
 
 	public static String EXAMPLE_SQL = "SELECT age FROM Users WHERE age > 20";
 
-	/*
-	public static class whereMap extends MapReduceBase implements Mapper<LongWritable, Text, Text, Text> {
-		public void  map(LongWritable key, Text value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
-			String line = value.toString();
-			ArrayList<String> fields = FormatConvertor.CSVToList(line);
-			output.collect(new Text(line), new Text(fields.get(2)));
-		}
-	}
-	*/
 	public static void main(String args[]) throws Exception {
 		System.exit(ToolRunner.run(new Configuration(), new SQL(), args));
 	}
@@ -53,7 +44,7 @@ public class SQL extends Configured implements Tool {
 		
 		Configuration conf = this.getConf();
 
-		conf.set("query",  "SELECT occupation, gender, AVG(age) FROM Users WHERE age > 20 GROUP BY occupation, gender HAVING gender = M");
+		conf.set("query",  "SELECT occupation, gender, AVG(age) FROM Users WHERE age > 20 GROUP BY occupation, gender HAVING AVG(age) > 20");
 
 		Job job = new Job(conf, "sql");
 		job.setJarByClass(SQL.class);
@@ -62,27 +53,6 @@ public class SQL extends Configured implements Tool {
 		job.setOutputValueClass(Text.class);
 		job.setInputFormatClass(TextInputFormat.class);
 		job.setOutputFormatClass(TextOutputFormat.class);
-
-
-		//JobConf conf = new JobConf(SQL.class);
-		//conf.set("query", EXAMPLE_SQL);
-		//conf.setInputFormat(TextInputFormat.class);
-		//conf.setOutputFormat(TextOutputFormat.class);
-
-		//Job job = Job.getInstance(conf, "sql");
-		//job.setJarByClass(SQL.class);
-
-
-		//JobConf conf = new JobConf(SQL.class);
-		//conf.setJobName("sql");
-
-
-		//conf.setOutputKeyClass(Text.class);
-		//conf.setOutputValueClass(Text.class);
-
-		//conf.setMapperClass(WhereMap.class);
-		
-		//Job job = new Job(conf);
 
 		Configuration whereConf = new Configuration(false);
 		ChainMapper.addMapper(job, 
@@ -112,6 +82,16 @@ public class SQL extends Configured implements Tool {
 				Text.class,
 				Text.class,
 				groupByReduceConf
+				);
+
+		Configuration havingReduceConf = new Configuration(false);
+		ChainReducer.addMapper(job,
+				HavingMap.class,
+				Text.class,
+				Text.class,
+				Text.class,
+				Text.class,
+				havingReduceConf
 				);
 
 		String tablePath = "/tmp/users.csv";
