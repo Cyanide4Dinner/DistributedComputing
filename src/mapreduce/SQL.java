@@ -53,7 +53,7 @@ public class SQL extends Configured implements Tool {
 		
 		Configuration conf = this.getConf();
 
-		conf.set("query", "SELECT age FROM Users WHERE age > 20");
+		conf.set("query",  "SELECT occupation, gender, AVG(age) FROM Users WHERE age > 20 GROUP BY occupation, gender HAVING gender = M");
 
 		Job job = new Job(conf, "sql");
 		job.setJarByClass(SQL.class);
@@ -96,12 +96,22 @@ public class SQL extends Configured implements Tool {
 
 		Configuration selectConf = new Configuration(false);
 		ChainMapper.addMapper(job,
-					SelectMap.class,
+					GroupByMap.class,
 					Text.class,
 					Text.class,
 					Text.class,
 					Text.class,
 					selectConf
+				);
+
+		Configuration groupByReduceConf = new Configuration(false);
+		ChainReducer.setReducer(job,
+				GroupByReduce.class,
+				Text.class,
+				Text.class,
+				Text.class,
+				Text.class,
+				groupByReduceConf
 				);
 
 		String tablePath = "/tmp/users.csv";
