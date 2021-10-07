@@ -48,5 +48,5 @@ Following syntax of SQL are supported:
 - SELECT C1, C2, ... CN, D1, D2, ... DM FROM Table1 WHERE CX Operator Value INNER JOIN Table2 ON Table1.Column1 = Table2.Column2
 - SELECT C1, C2, ... CN, D1, D2, ... DM FROM Table1 WHERE CX Operator Value LEFT OUTER JOIN Table2 ON Table1.Column1 = Table2.Column2 
 
-where AG:
+where:
 - AG : Aggregator (COUNT, MAX, MIN, AVG, SUM)
