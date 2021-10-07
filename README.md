@@ -16,7 +16,7 @@
 - Similarly copy the input files `docker cp <PATH-TO-CSV-FILES> namenode:/tmp`.
 - Execute the following in namenode's shell. Switch to it using `docker exec -it namenode bash`
 - Put the input file in the HDFS as "input" using `hdfs -put tmp/<FILE-NAME-CSV> input`.
-- Execute `hadoop jar tmp/SQL.jar SQL input output`
+- Execute `hadoop jar tmp/SQL.jar SQL output`
 - Output will be written to `output` directory in hdfs. It then needs to be pulled back to docker fs and then to our local fs. Finally then it can be converted to our required format (JSON).
 
 ### Spark

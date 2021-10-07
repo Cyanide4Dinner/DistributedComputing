@@ -32,6 +32,16 @@ public class FormatConvertor {
 	}
 
 	public static ArrayList<String> CSVToList(String str){
-		return new ArrayList(Arrays.asList(str.split(",")));
+		ArrayList<String> res = new ArrayList(Arrays.asList(str.split(",")));
+		ArrayList<String> ret = new ArrayList<String>();
+		for(int i=0;i<res.size();i++){
+			if(res.get(i).charAt(0) == '"'){
+				ret.add(res.get(i).substring(1,res.get(i).length()-1));
+			}
+			else{
+				ret.add(res.get(i));
+			}
+		}
+		return ret;
 	}
 }

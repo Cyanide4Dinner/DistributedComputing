@@ -2,6 +2,22 @@ import java.util.*;
 
 
 public class Structure {
+	
+	public static String query = "SELECT age FROM Users WHERE age > 20";
+
+	public static void main(String[] args){
+		//String str = "age,gender,occupation";
+		//ArrayList<String> slist = FormatConvertor.CSVToList(str);
+		//for(int i=0;i<slist.size();i++) System.out.println(slist.get(i));
+		//String str2 = FormatConvertor.ListToCSV(slist);
+		ArrayList<String> selectColumns = Parser.getSelectColumns(query);
+		for(int i=0;i<selectColumns.size(); i++){
+			System.out.println("+"+selectColumns.get(i)+"+");
+			System.out.println("+"+selectColumns.get(i).trim()+"+");
+			//System.out.println(Structure.getColumnNumber(Parser.getTableName(query), selectColumns.get(i)));
+		}
+	}
+
 	public static int getColumnNumber(String tableName, String columnName){
 		int ret = 0;
 		ArrayList<String> columns;
@@ -63,9 +79,5 @@ public class Structure {
 				break;
 		}
 		return ret;
-	}
-
-	public static void main(String[] args){
-		System.out.println(getColumnNumber("Users","age"));
 	}
 }
