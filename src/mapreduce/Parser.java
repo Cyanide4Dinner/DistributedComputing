@@ -20,6 +20,20 @@ public class Parser {
 		return args.get(1);
 	}
 
+	public static String getJoinTableName(String query){
+		int i = query.indexOf("JOIN");
+		String temp = query.substring(i,query.length());
+		ArrayList<String> args = new ArrayList(Arrays.asList(temp.split(" ")));
+		return args.get(1);
+	}
+
+	public static String getJoinColumn(String query){
+		int i = query.indexOf("ON");
+		String temp = query.substring(i, query.length());
+		ArrayList<String> args = new ArrayList(Arrays.asList(temp.split(" ")));
+		return args.get(1);
+	}
+
 	public static ArrayList<String> getSelectColumns(String query) {
 		int i = query.indexOf("FROM");
 		String temp = query.substring(7,i);
@@ -111,15 +125,26 @@ public class Parser {
 				return ret;
 			}
 		}
-		ret.add("");
-		ret.add("");
 		return ret;
 	}
 
-	public static void main(String[] args){
-		ArrayList<String> res = getGroupBy(EXAMPLE_SQL);
-		for(int i=0;i<res.size();i++){
-			System.out.println("+"+res.get(i)+"+");
+	public static boolean containsAggregator(String query){
+		return query.contains("COUNT") || query.contains("AVG") || query.contains("MIN") || query.contains("MAX") || query.contains("SUM");
+	}
+
+	public static int findCase(String query){
+		if(query.contains("LEFT OUTER JOIN")) return 6;
+		if(query.contains("INNER JOIN")) return 5;
+		if(query.contains("NATURAL JOIN")) return 4;
+		if(containsAggregator(query)){
+			if(getHaving(query).get(0).contains("(")) return 2;
+			else return 3;
 		}
+		return 1;
+}
+
+	public static void main(String[] args){
+		String query = "SELECT gender, age FROM Users WHERE age > 20 NATURAL JOIN Movies ON userid";		
+		System.out.println("+"+getJoinColumn(query)+"+");
 	}
 }

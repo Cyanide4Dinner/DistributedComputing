@@ -13,47 +13,19 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.fs.Path;
 
-public class HavingMap extends Mapper<Text, Text, Text, Text> {
-	public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
-		Configuration conf = context.getConfiguration();
-		String query = conf.get("query");
+public class WhereMapJoin extends Mapper<LongWritable, Text, Text, Text> {
 
-		ArrayList<String> clause = Parser.getHaving(query);
+	public void  map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
-		if(Parser.findCase(query) == 2) {
-			Double aggregatorValue = Double.parseDouble(value.toString());
-			
-			boolean doesItSatisfy = false;
-			switch(clause.get(1)){
-				case "=":
-					doesItSatisfy = aggregatorValue == Double.parseDouble(clause.get(2));
-					break;
-				case "<":
-					doesItSatisfy = aggregatorValue <  Double.parseDouble(clause.get(2));
-					break;
-				case ">":
-					doesItSatisfy = aggregatorValue >  Double.parseDouble(clause.get(2));
-					break;
-				case "<=":
-					doesItSatisfy = aggregatorValue <= Double.parseDouble(clause.get(2));
-					break;
-				case ">=":
-					doesItSatisfy = aggregatorValue >=  Double.parseDouble(clause.get(2));
-					break;
-				case "<>":
-					doesItSatisfy = aggregatorValue != Double.parseDouble(clause.get(2));
-					break;
-			}
+			Configuration conf = context.getConfiguration();
+			String query = conf.get("query");
 
-			if(doesItSatisfy) context.write(key, value);
-		}
-		else{
-			String line = key.toString();
+			//0 - columnName, 1 - operator, 2 - value
+			ArrayList<String> clause = Parser.getWhere(query); 
+			String line = value.toString();
 			ArrayList<String> fields = FormatConvertor.CSVToList(line);
 
-			//String columnValue = fields.get(Structure.getColumnNumber(Parser.getTableName(query),clause.get(0)));	
-			String columnValue = fields.get(Parser.getGroupBy(query).indexOf(clause.get(0)));	
-			
+			String columnValue = fields.get(Structure.getColumnNumber(Parser.getTableName(query),clause.get(0)));	
 
 			boolean doesItSatisfy = false;
 			switch(clause.get(1)){
@@ -82,7 +54,9 @@ public class HavingMap extends Mapper<Text, Text, Text, Text> {
 					break;
 			}
 
-			if(doesItSatisfy) context.write(key, value);
-		}
+			if(doesItSatisfy) {
+				String joinColumn = Parser.getJoinColumn(query);
+				context.write(new Text(fields.get(Structure.getColumnNumber(Parser.getTableName(query), joinColumn))), new Text(line));
+			}
 	}
 }
