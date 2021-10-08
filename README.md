@@ -44,8 +44,8 @@ Following syntax of SQL are supported:
 2. SELECT C1, C2, ... CN, AG FROM Table WHERE CX Operator Value GROUP BY C1, C2, ... CN HAVING AG Operator Value
 3. SELECT C1, C2, ... CN, AG FROM Table WHERE CX Operator Value GROUP BY C1, C2, ... CN HAVING CY Operator Value
 4. SELECT C1, C2, ... CN, D1, D2 ... DM FROM Table1 WHERE CX Operator Value NATURAL JOIN Table2
-5. SELECT C1, C2, ... CN, D1, D2, ... DM FROM Table1 WHERE CX Operator Value INNER JOIN Table2 ON JoinColumn
-6. SELECT C1, C2, ... CN, D1, D2, ... DM FROM Table1 WHERE CX Operator Value LEFT OUTER JOIN Table2 ON JoinColumn 
+5. SELECT Table1.C1, Table1.C2, ... Table1.CN, Table2.D1, Table2.D2, ... Table2.DM FROM Table1 WHERE CX Operator Value INNER JOIN Table2 ON Table1.CY = Table2.DY
+6. SELECT Table1.C1, Table1.C2, ... Table1.CN, Table2.D1, Table2.D2, ... Table2.DM FROM Table1 WHERE CX Operator Value LEFT OUTER JOIN Table2 ON Table1.CY = Table2.DY 
 
 where:
 - AG : Aggregator (COUNT, MAX, MIN, AVG, SUM)

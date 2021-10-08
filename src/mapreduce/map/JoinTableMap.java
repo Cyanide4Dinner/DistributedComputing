@@ -23,7 +23,11 @@ public class JoinTableMap extends Mapper<LongWritable, Text, Text, Text> {
 			String line = value.toString();
 			ArrayList<String> fields = FormatConvertor.CSVToList(line);
 
-			String joinColumn = Parser.getJoinColumn(query);
-			context.write(new Text(fields.get(Structure.getColumnNumber(Parser.getJoinTableName(query), joinColumn))), new Text(line));
+			int sqlCase = Parser.findCase(query);
+
+			String joinColumn;
+			if(sqlCase == 4) joinColumn = Parser.getNaturalJoinColumn( Parser.getTableName(query), Parser.getJoinTableName(query) );
+			else joinColumn = Parser.getJoinColumnTable2(query).get(1);
+			context.write(new Text(fields.get(Structure.getColumnNumber(Parser.getJoinTableName(query), joinColumn))), new Text("B"+line));
 	}
 }

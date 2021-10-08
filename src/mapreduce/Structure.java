@@ -19,7 +19,7 @@ public class Structure {
 	}
 
 	public static int getColumnNumber(String tableName, String columnName){
-		int ret = 0;
+		int ret = -1;
 		ArrayList<String> columns;
 		switch(tableName){
 			case "Users":

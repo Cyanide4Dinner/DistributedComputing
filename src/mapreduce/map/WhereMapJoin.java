@@ -53,10 +53,14 @@ public class WhereMapJoin extends Mapper<LongWritable, Text, Text, Text> {
 				case "IN":
 					break;
 			}
+			
+			int sqlCase = Parser.findCase(query);
 
 			if(doesItSatisfy) {
-				String joinColumn = Parser.getJoinColumn(query);
-				context.write(new Text(fields.get(Structure.getColumnNumber(Parser.getTableName(query), joinColumn))), new Text(line));
+				String joinColumn;
+				if(sqlCase == 4) joinColumn = Parser.getNaturalJoinColumn( Parser.getTableName(query), Parser.getJoinTableName(query) );
+				else joinColumn = Parser.getJoinColumnTable1(query).get(1);
+				context.write(new Text(fields.get(Structure.getColumnNumber(Parser.getTableName(query), joinColumn))), new Text("A"+line));
 			}
 	}
 }

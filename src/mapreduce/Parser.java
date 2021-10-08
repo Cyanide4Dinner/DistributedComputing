@@ -3,8 +3,6 @@ import java.util.*;
 
 public class Parser {
 
-	public static String EXAMPLE_SQL = "SELECT occupation, gender, AVG(age) FROM Users WHERE age > 20 GROUP BY occupation, gender HAVING gender = M";
-
 	public static ArrayList<String> getWhere(String query){
 		int i = query.indexOf("WHERE");
 		String temp = query.substring(i,query.length());	
@@ -32,6 +30,33 @@ public class Parser {
 		String temp = query.substring(i, query.length());
 		ArrayList<String> args = new ArrayList(Arrays.asList(temp.split(" ")));
 		return args.get(1);
+	}
+
+	public static ArrayList<String> getJoinColumnTable1(String query){
+		int i = query.indexOf("ON");
+		String temp = query.substring(i, query.length());
+		ArrayList<String> args = new ArrayList(Arrays.asList(temp.split(" ")));
+		ArrayList<String> ret = new ArrayList<String>();
+		ret.add(args.get(1).substring(0,args.get(1).trim().indexOf(".")));
+		ret.add(args.get(1).substring(args.get(1).trim().indexOf(".")+1,args.get(1).trim().length()));
+		return ret;
+	}
+
+	public static ArrayList<String> getJoinColumnTable2(String query){
+		int i = query.indexOf("ON");
+		String temp = query.substring(i, query.length());
+		ArrayList<String> args = new ArrayList(Arrays.asList(temp.split(" ")));
+		ArrayList<String> ret = new ArrayList<String>();
+		ret.add(args.get(3).substring(0,args.get(3).trim().indexOf(".")));
+		ret.add(args.get(3).substring(args.get(3).trim().indexOf(".")+1,args.get(3).trim().length()));
+		return ret;
+	}
+
+	public static ArrayList<String> getDelimitByPeriod(String column){
+		ArrayList<String> ret = new ArrayList<String>();
+		ret.add(column.substring(0,column.trim().indexOf(".")));
+		ret.add(column.substring(column.trim().indexOf(".")+1,column.trim().length()));
+		return ret;
 	}
 
 	public static ArrayList<String> getSelectColumns(String query) {
@@ -62,6 +87,20 @@ public class Parser {
 			ret.add(args.get(j).trim());
 		}
 		return ret;
+	}
+
+	public static String getNaturalJoinColumn(String table1, String table2){
+		if( ( table1.equals("Users") && table2.equals("Rating") ) || ( table1.equals("Rating") && table2.equals("Users") )  ) return "userid";
+		if( ( table1.equals("Movies") && table2.equals("Rating") ) || ( table1.equals("Rating") && table2.equals("Movies") )  ) return "movieid";
+		else return "zipcode";
+	}
+
+	public static ArrayList<String> getNaturalJoinPair(String column){
+		ArrayList<String> ret = new ArrayList<String>();
+		if(Structure.getColumnNumber("Users", column) != -1) { ret.add("Users"); ret.add(column); return ret; }
+		if(Structure.getColumnNumber("Movies", column) != -1) { ret.add("Movies"); ret.add(column); return ret; }
+		if(Structure.getColumnNumber("Rating", column) != -1) { ret.add("Rating"); ret.add(column); return ret; }
+		else { ret.add("Rating"); ret.add(column); return ret; }
 	}
 
 	public static ArrayList<String> getAggregator(String query){
@@ -144,7 +183,16 @@ public class Parser {
 }
 
 	public static void main(String[] args){
-		String query = "SELECT gender, age FROM Users WHERE age > 20 NATURAL JOIN Movies ON userid";		
-		System.out.println("+"+getJoinColumn(query)+"+");
+ 		String query = "SELECT occupation, gender FROM Users WHERE age > 20 INNER JOIN Zipcodes ON Users.zipcode = Zipcodes.zipcode";
+		ArrayList<String> a = getJoinColumnTable1(query);
+		ArrayList<String> b = getJoinColumnTable2(query);
+		System.out.println(a.size());
+		//System.out.println("+"+a.get(1).substring(0,a.get(1).indexOf("."))+"+");
+		for(int i=0; i<2; i++){
+			System.out.println("+"+a.get(i)+"+");
+		}
+		for(int i=0; i<2; i++){
+			System.out.println("+"+b.get(i)+"+");
+		}
 	}
 }
