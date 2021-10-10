@@ -56,14 +56,92 @@ columnNumbers = {
             ]
         }
 
-def parseAndExecute( sql, rdds ):
-    selectColumns = sql[7:sql.find("FROM")-1].split(", ")
-    tokens = sql[sql.find("FROM"):].split(" ") 
-    curr = fromRDDAction( tokens[1], rdds )
-    curr = whereRDDAction( tokens[3], tokens[4], tokens[5], tokens[1], curr)
-    curr = selectRDDAction(selectColumns, tokens[1], curr)
+def parseAndExecute(sql, rdds):
+
+    #    selectColumns = sql[7:sql.find("FROM")-1].split(", ")
+    if "(" in sql[:sql.find("FIND")]:
+        selectAggregated, sql = getSelectAggregate(sql)
+
+
+    selectFromColumns = getSelectColumns(sql)
+    #tokens = sql[sql.find("FROM"):].split(" ") 
+    fromTableName = getFromTableName(sql)
+
+    curr = fromRDDAction( fromTableName, rdds)
+    if "WHERE" in sql:
+        whereColumn, operator, value = getWhereCondition(sql)
+        curr = whereRDDAction(whereColumn, operator, value, fromTableName, curr)
+
+    if "GROUP" in sql:
+        if "HAVING" in sql:
+            havingAggregated = getHavingAggregate(sql)
+        groupColumns = getGroupColumnName(sql)
+        curr = groupRDDAction(selectAggregated, havingAggregated, groupColumns, fromTableName, curr)
+        # curr = havingRDDAction(aggregator, 'aggregatedColumn', curr)
+
+
+    curr = selectRDDAction(selectFromColumns, fromTableName, curr)
+
     print("Executed")
     return curr
+
+def getFromTableName (sql):
+    return sql[sql.find("FROM"):].split(" ", maxsplit=2)[1]
+
+def getSelectColumns (sql):
+    return sql[7:sql.find("FROM")-1].split(", ")
+
+def getSelectAggregate (sql):
+    selectAggregated = []
+    
+    if ("(" not in sql[:sql.find("FROM")]):
+        return selectAggregated
+    
+    selectAggregated.append(sql[:sql.find("(")].split()[-1])
+    selectAggregated.append(sql[sql.find("(")+1: sql.find(")")].strip())
+    # selectAggregated.append(sql[sql.find(")"):].split(" ")[1])
+    # selectAggregated.append(sql[sql.find(")"):]).split(" ")[2]
+
+    return selectAggregated
+    
+    # selectAggregated = [[]]
+    # while "(" in sql:
+    #     aggregator = sql[:sql.find("(")].split()[-1]
+    #     aggregatedColumn = sql[sql.find("(")+1: sql.find(")")].strip()
+    #     selectAggregated.append([aggregator, aggregatedColumn])
+    #     sql = sql[:sql.find(aggregator)] + sql[sql.find(")")+2:]
+
+    # return selectAggregated, sql
+
+def getGroupColumnName (sql):
+    return sql[sql.find("GROUP BY")+9:].split(", ")
+
+def getHavingAggregate (sql):
+    havingAggregated = []
+    sql = sql[sql.find("HAVING")+7:]
+    havingAggregated.append(sql[:sql.find("(")].split()[-1])
+    havingAggregated.append(sql[sql.find("(")+1: sql.find(")")].strip())
+    havingAggregated.append(sql[sql.find(")"):].split(" ")[1])
+    havingAggregated.append(sql[sql.find(")"):]).split(" ")[2]
+
+    return havingAggregated
+
+
+
+
+    # havingAggregated = [[]]
+    # sql = sql[sql.find("HAVING")+7:]
+    # while "(" in sql:
+    #     aggregator = sql[:sql.find("(")].split()[-1]
+    #     aggregatedColumn = sql[sql.find("(")+1: sql.find(")")].strip()
+    #     havingAggregated.append([aggregator, aggregatedColumn])
+    #     sql = sql[:sql.find(aggregator)] + sql[sql.find(")")+2:]
+
+    # return havingAggregated
+
+def getWhereCondition (sql):
+    where = sql[sql.find("WHERE"):].split(" ")
+    return where[1], where[2], where[3]
 
 def fromRDDAction( tableName, rdds ):
     if(tableName == "Movies"):
@@ -98,6 +176,45 @@ def whereRDDAction( columnName, operator, value, tableName, rdd ):
     else:
         return rdd
 
+def groupRDDAction(selectAggregated, havingAggregated, groupColumns, tableName, curr):
+    cols = [columnNumbers[tableName].index(x) for x in groupColumns]
+
+    aggSelectColumn = columnNumbers[tableName].index(selectAggregated[1])
+    aggHavingColumn = columnNumbers[tableName].index(havingAggregated[1])
+
+    mapped = curr.map(lambda row: ([row[i] for i in cols], [row[aggSelectColumn], row[aggHavingColumn]]))
+    # grouped = mapped.aggregateByKey().mapValues(list).map(lambda x: list(x))
+
+    selectAggregator = selectAggregated[0]
+    havingAggregator = havingAggregated[0]
+
+    if (selectAggregator == "AVG"):
+        grouped = mapped.aggregateByKey((0,0), lambda acc, val: (acc[0] + val[0], acc[1] + 1), lambda acc1, acc2: (acc1[0] + acc2[0], acc1[1] + acc2[1]))
+        grouped = grouped.map(lambda q: (q[0], (1.0*q[1][0])/q[1][1]))
+
+    elif (selectAggregator == "SUM"):
+        grouped = mapped.aggregateByKey(0, lambda acc, val: acc + val[0], lambda acc1, acc2: acc1 + acc2)
+        grouped = grouped.map(lambda q: (q[0], q[1]))
+
+    elif (selectAggregator == "MAX"):
+        grouped = mapped.aggregateByKey(0, lambda acc, val: max(acc, val[0]), lambda acc1, acc2: max(acc1, acc2))
+        grouped = grouped.map(lambda q: (q[0], q[1]))
+
+    elif (selectAggregator == "MIN"):
+        grouped = mapped.aggregateByKey(10000000000, lambda acc, val: min(acc, val[0]), lambda acc1, acc2: min(acc1, acc2))
+        grouped = grouped.map(lambda q: (q[0], q[1]))
+
+    elif (selectAggregator == "COUNT"):
+        grouped = mapped.aggregateByKey(0, lambda acc, val: val+1, lambda acc1, acc2: acc1 + acc2)
+        grouped = grouped.map(lambda q: (q[0], q[1]))
+
+    return grouped.mapValues(list).map(lambda x: list(x))
+
+    
+
+    
+    
+
 def selectRDDAction( columnNames, tableName, rdd ):
     def selectColumnValues (row):
         fin = []
@@ -106,5 +223,6 @@ def selectRDDAction( columnNames, tableName, rdd ):
             fin.append(row[col])
         return fin
     return rdd.map(selectColumnValues)
+    
     
 #parseAndExecute(EXAMPLE_SQL, " ")
