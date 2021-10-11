@@ -6,7 +6,7 @@ import collections
 import random
 import csv
 
-HOST_IP = "192.168.1.19"
+HOST_IP = "192.168.1.13"
 
 spark_conf = SparkConf()
 spark_conf.setAll([
@@ -39,11 +39,11 @@ zipcodesRDD = loadIntoRDD("zipcodes")
 
 from logic import parseAndExecute
 
-EXAMPLE_SQL = "SELECT age, gender FROM Users WHERE age = 20"
+EXAMPLE_SQL = "SELECT gender FROM Users WHERE age > 20" # GROUP BY gender HAVING COUNT(occupation) > 1"
 result = parseAndExecute(EXAMPLE_SQL, [moviesRDD, ratingRDD, usersRDD, zipcodesRDD])
 result = result.collect()
 for row in result:
     #print(row[0] + ',' + row[1]+ ',' + row[2]+ ',' + row[3]+ ',' + row[4])
-    print(row[0] + ',' + row[1])
+    print(row)
 
 print("Hello")
