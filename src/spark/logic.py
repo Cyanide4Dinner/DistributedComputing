@@ -66,24 +66,24 @@ def parseAndExecute(sql, rdds):
 
 	curr = fromRDDAction( fromTableName, rdds)
 
-	if "WHERE" in sql:
+	if " WHERE " in sql:
 		whereColumn, relate, value = getWhereCondition(sql)
 		curr = whereRDDAction(whereColumn, relate, value, fromTableName, curr)
 
 	for row in curr.collect():
 		print(row)
 		
-	if "JOIN" in sql:
-		if ("INNER" in sql):
-			return innerJoinRDDAction(sql, selectFromColumns, curr, rdds)
-		if ("LEFT" in sql):
+	if " JOIN " in sql:
+		if (" LEFT " in sql):
 			return leftJoinRDDAction(sql, selectFromColumns, curr, rdds)
-		if ("NATURAL" in sql):
+		if (" NATURAL " in sql):
 			return 
+		else:
+			return innerJoinRDDAction(sql, selectFromColumns, curr, rdds)
 
-	if "GROUP" in sql:
+	if " GROUP " in sql:
 		havingAggregated = []
-		if "HAVING" in sql:
+		if " HAVING " in sql:
 			havingAggregated = getHavingAggregate(sql)
 		groupColumns = getGroupColumns(sql)
 		curr = groupRDDAction(selectAggregated, havingAggregated, groupColumns, fromTableName, curr)
