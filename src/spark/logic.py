@@ -1,4 +1,5 @@
 from pyspark import RDD
+from math import trunc
 import re
 
 EXAMPLE_SQL = "SELECT age FROM Movies WHERE age > 5"
@@ -70,35 +71,21 @@ def parseAndExecute(sql, rdds):
     #tokens = sql[sql.find("FROM"):].split(" ") 
     fromTableName = getFromTableName(sql)
 
-    print("table name:\t" + fromTableName)
-
     curr = fromRDDAction( fromTableName, rdds)
 
-    print(sql)
-    input(int())
-    
-    print("loaded")
-
     if "WHERE" in sql:
-        whereColumn, operator, value = getWhereCondition(sql)
-        curr = whereRDDAction(whereColumn, operator, value, fromTableName, curr)
-        # result = curr.collect()
-        # for row in result: print(row)
+        whereColumn, relate, value = getWhereCondition(sql)
+        curr = whereRDDAction(whereColumn, relate, value, fromTableName, curr)
         
     a = curr.collect()
 
-    for row in a:
-        print(row)
-
     if "GROUP" in sql:
+        havingAggregated = []
         if "HAVING" in sql:
             havingAggregated = getHavingAggregate(sql)
         groupColumns = getGroupColumns(sql)
-        print(groupColumns)
         curr = groupRDDAction(selectAggregated, havingAggregated, groupColumns, fromTableName, curr)
         return curr
-        # curr = havingRDDAction(aggregator, 'aggregatedColumn', curr)
-
     
 
 
@@ -175,24 +162,24 @@ def fromRDDAction( tableName, rdds ):
     else:
         return rdds[3]
 
-def whereRDDAction( columnName, operator, value, tableName, rdd ):
-    print("column: "+ columnName+" operator: "+operator+" value: "+value+" table: "+tableName)
+def whereRDDAction( columnName, relate, value, tableName, rdd ):
+    print("column: "+ columnName+" operator: "+relate+" value: "+value+" table: "+tableName)
     col = columnNumbers[tableName].index(columnName) 
-    if(operator == "="): 
+    if(relate == "="): 
         return rdd.filter(lambda row: int(row[col]) == int(value))
-    elif(operator == ">"):
+    elif(relate == ">"):
         return rdd.filter(lambda row: int(row[col]) > int(value))
-    elif(operator == "<"):
+    elif(relate == "<"):
         return rdd.filter(lambda row: int(row[col]) < int(value))
-    elif(operator == ">="):
+    elif(relate == ">="):
         return rdd.filter(lambda row: int(row[col]) >= int(value))
-    elif(operator == "<="):
+    elif(relate == "<="):
         return rdd.filter(lambda row: int(row[col]) <= int(value))
-    elif(operator == "<>"):
+    elif(relate == "<>"):
         return rdd.filter(lambda row: int(row[col]) != int(value))
-    elif(operator == "LIKE"):
+    elif(relate == "LIKE"):
         return rdd.filter(lambda row: re.match(value, row[col]) != None)
-    elif(operator == "IN"):
+    elif(relate == "IN"):
         #TODO
         return rdd
     else:
@@ -201,28 +188,17 @@ def whereRDDAction( columnName, operator, value, tableName, rdd ):
 def groupRDDAction(selectAggregated, havingAggregated, groupColumns, tableName, curr):
     cols = [columnNumbers[tableName].index(x) for x in groupColumns]
 
-    print(cols)
-
     aggSelectColumn = columnNumbers[tableName].index(selectAggregated[1])
     aggHavingColumn = columnNumbers[tableName].index(havingAggregated[1])
 
     mapped = curr.map(lambda row: ((*[row[i] for i in cols],), [row[aggSelectColumn], row[aggHavingColumn]]))
-    # grouped = mapped.aggregateByKey().mapValues(list).map(lambda x: list(x))
-
-    # a = mapped.collect()
-
-
-    for row in mapped.collect():
-        print(row)
     
-    input((int))
-
     selectAggregator = selectAggregated[0]
     havingAggregator = havingAggregated[0]
 
     if (selectAggregator == "AVG"):
         grouped = mapped.aggregateByKey((0,0), lambda acc, val: (int(acc[0]) + int(val[0]), int(acc[1]) + 1), lambda acc1, acc2: (int(acc1[0]) + int(acc2[0]), int(acc1[1]) + int(acc2[1])))
-        grouped = grouped.map(lambda q: (q[0], (1.0*q[1][0])/q[1][1]))
+        grouped = grouped.map(lambda q: (q[0], trunc((1.0*q[1][0])/q[1][1])), 3)
 
     elif (selectAggregator == "SUM"):
         grouped = mapped.aggregateByKey(0, lambda acc, val: acc + val[0], lambda acc1, acc2: acc1 + acc2)
@@ -230,30 +206,54 @@ def groupRDDAction(selectAggregated, havingAggregated, groupColumns, tableName, 
 
     elif (selectAggregator == "MAX"):
         grouped = mapped.aggregateByKey(0, lambda acc, val: max(int(acc), int(val[0])), lambda acc1, acc2: max(int(acc1), int(acc2)))
-        # grouped = grouped.map(lambda q: list(q[0]).append(q[1]))
-        grouped = grouped.map(lambda q: list(q[0]).append( q[1]))
-        input()
-        for row in grouped.collect():
-            print(row, " ", type(row))
-        print("grouped")
-        input()
 
     elif (selectAggregator == "MIN"):
         grouped = mapped.aggregateByKey(10000000000, lambda acc, val: min(int(acc), int(val[0])), lambda acc1, acc2: min(int(acc1), int(acc2)))
-        grouped = grouped.map(lambda q: (q[0], q[1]))
 
     elif (selectAggregator == "COUNT"):
-        grouped = mapped.aggregateByKey(0, lambda acc, val: val+1, lambda acc1, acc2: acc1 + acc2)
-        grouped = grouped.map(lambda q: (q[0], q[1]))
+        grouped = mapped.aggregateByKey(tuple(), lambda acc, val: acc + (val[0], ), lambda acc1, acc2: acc1 + acc2)
+        grouped = grouped.map(lambda q: (q[0], len(set(q[1]))))
 
 
     if (havingAggregator == "AVG"):
-        controlled = mapped.aggregateByKey(0, lambda acc, val: acc + val[0], lambda acc1, acc2: acc1 + acc2)
+        controlled = mapped.aggregateByKey((0,0), lambda acc, val: (int(acc[0]) + int(val[1]), int(acc[1]) + 1), lambda acc1, acc2: (int(acc1[0]) + int(acc2[0]), int(acc1[1]) + int(acc2[1])))
+        controlled = controlled.map(lambda q: (q[0], trunc((1.0*q[1][0])/q[1][1])), 3)
 
-    
+    elif (havingAggregator == "SUM"):
+        controlled = mapped.aggregateByKey(0, lambda acc, val: acc + val[1], lambda acc1, acc2: acc1 + acc2)
+        controlled = controlled.map(lambda q: (q[0], q[1]))
 
-    
-    
+    elif (havingAggregator == "MAX"):
+        controlled = mapped.aggregateByKey(0, lambda acc, val: max(int(acc), int(val[1])), lambda acc1, acc2: max(int(acc1), int(acc2)))
+
+    elif (selectAggregator == "MIN"):
+        controlled = mapped.aggregateByKey(10000000000, lambda acc, val: min(int(acc), int(val[1])), lambda acc1, acc2: min(int(acc1), int(acc2)))
+
+    elif (havingAggregator == "COUNT"):
+        controlled = mapped.aggregateByKey(tuple(), lambda acc, val: acc + (val[1], ), lambda acc1, acc2: acc1 + acc2)
+        controlled = controlled.map(lambda q: (q[0], len(set(q[1]))))
+
+    else:
+        return grouped.map(lambda q: [x for x in q[0]] + [x for x in q[1:]])
+
+
+    relate = havingAggregated[2]
+    if(relate == "="): 
+        controlled = controlled.filter(lambda q: float(q[1]) == float(havingAggregated[3]))
+    elif(relate == ">"):
+        controlled = controlled.filter(lambda q: float(q[1]) > float(havingAggregated[3]))
+    elif(relate == "<"):
+        controlled = controlled.filter(lambda q: float(q[1]) < float(havingAggregated[3]))
+    elif(relate == ">="):
+        controlled = controlled.filter(lambda q: float(q[1]) >= float(havingAggregated[3]))
+    elif(relate == "<="):
+        controlled = controlled.filter(lambda q: float(q[1]) <= float(havingAggregated[3]))
+    elif(relate == "<>"):
+        controlled = controlled.filter(lambda q: float(q[1]) != float(havingAggregated[3]))
+
+    grouped = grouped.join(controlled)
+
+    return grouped.map(lambda q: [x for x in q[0]] + [x for x in q[1][:1]])
 
 def selectRDDAction( columnNames, tableName, rdd ):
     def selectColumnValues (row):
@@ -265,4 +265,3 @@ def selectRDDAction( columnNames, tableName, rdd ):
     return rdd.map(selectColumnValues)
     
     
-#parseAndExecute(EXAMPLE_SQL, " ")
