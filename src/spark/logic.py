@@ -58,7 +58,7 @@ columnNumbers = {
 		}
 
 def parseAndExecute(sql, rdds):
-	if "(" in sql[:sql.find("FIND")]:
+	if "(" in sql[:sql.find("FROM")]:
 		selectAggregated, sql = getSelectAggregate(sql)
 
 	selectFromColumns = getSelectColumns(sql)
@@ -68,7 +68,6 @@ def parseAndExecute(sql, rdds):
 
 	if "WHERE" in sql:
 		whereColumn, relate, value = getWhereCondition(sql)
-		print(whereColumn, relate, value, fromTableName)
 		curr = whereRDDAction(whereColumn, relate, value, fromTableName, curr)
 
 	for row in curr.collect():
@@ -95,7 +94,7 @@ def parseAndExecute(sql, rdds):
 
 
 def getFromTableName (sql):
-	return sql[sql.find("FROM"):].split(" ", maxsplit=2)[1]
+	return sql[sql.find("FROM"):].split(" ")[1]
 
 def getSelectColumns (sql):
 	return sql[7:sql.find("FROM")-1].split(", ")
@@ -123,8 +122,11 @@ def getHavingAggregate (sql):
 
 def getWhereCondition (sql):
 	where = sql[sql.find("WHERE"):].split(" ")
-	return where[1], where[2], where[3]
-
+	if " IN " not in sql:
+		return where[1], where[2], where[3]
+	
+	inParam = sql[sql.find("IN")+4:]
+	return where[1], where[2], inParam[:inParam.find(")")].replace(",", "").replace("\'", "").split(" ")
 
 def fromRDDAction( tableName, rdds ):
 	if(tableName == "Movies"):
@@ -154,8 +156,7 @@ def whereRDDAction( columnName, relate, value, tableName, rdd ):
 	elif(relate == "LIKE"):
 		return rdd.filter(lambda row: re.match(value, row[col]) != None)
 	elif(relate == "IN"):
-		#TODO
-		return rdd
+		return rdd.filter(lambda row: row[col] in value)
 	else:
 		return rdd
 

@@ -41,7 +41,7 @@ from logic import parseAndExecute
 
 EXAMPLE_SQL = "SELECT COUNT(occupation), gender, age FROM Users WHERE age > 20 GROUP BY gender, age HAVING COUNT(occupation) > 5"
 EXAMPLE_SQL = "SELECT Users.age, Rating.rating, Rating.movieid FROM Users WHERE age > 20 INNER JOIN Rating ON Users.userid = Rating.userid"
-EXAMPLE_SQL = "SELECT Users.userid, Users.zipcode, Zipcodes.city FROM Users WHERE age > 20 INNER JOIN Zipcodes ON Users.zipcode = Zipcodes.zipcode"
+EXAMPLE_SQL = "SELECT Users.userid, Users.zipcode, Zipcodes.city FROM Users WHERE age > 20 LEFT JOIN Zipcodes ON Users.zipcode = Zipcodes.zipcode"
 result = parseAndExecute(EXAMPLE_SQL, [moviesRDD, ratingRDD, usersRDD, zipcodesRDD])
 result = result.collect()
 for row in result:
