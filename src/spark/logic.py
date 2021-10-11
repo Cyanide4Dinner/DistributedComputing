@@ -75,7 +75,12 @@ def parseAndExecute(sql, rdds):
 		print(row)
 		
 	if "JOIN" in sql:
-		return joinRDDAction(sql, selectFromColumns, curr, rdds)
+		if ("INNER" in sql):
+			return innerJoinRDDAction(sql, selectFromColumns, curr, rdds)
+		if ("LEFT" in sql):
+			return leftJoinRDDAction(sql, selectFromColumns, curr, rdds)
+		if ("NATURAL" in sql):
+			return 
 
 	if "GROUP" in sql:
 		havingAggregated = []
@@ -227,7 +232,7 @@ def selectRDDAction( columnNames, tableName, rdd ):
 	return rdd.map(selectColumnValues)
 	
 
-def joinRDDAction(sql, selectColumns, rdd1, rdds):
+def innerJoinRDDAction(sql, selectColumns, rdd1, rdds):
 	table1 = getFromTableName(sql)
 	table2 = sql[sql.find("JOIN")+5:].split(" ")[0]
 
@@ -237,13 +242,37 @@ def joinRDDAction(sql, selectColumns, rdd1, rdds):
 	selectColumns1 = getSelectJoinColumns(table1, selectColumns)
 	selectColumns2 = getSelectJoinColumns(table2, selectColumns)
 
-	print(table1ColumnON, table2ColumnON, selectColumns1, selectColumns2, selectColumns)
+	rdd2 = fromRDDAction(table2, rdds)
+
+	mapped1 = rdd1.map(lambda row: (row[columnNumbers[table1].index(table1ColumnON)], tuple([row[columnNumbers[table1].index(i)] for i in selectColumns1])))
+	mapped2 = rdd2.map(lambda row: (row[columnNumbers[table2].index(table2ColumnON)], tuple([row[columnNumbers[table2].index(i)] for i in selectColumns2])))
+	
+	# for row in mapped1.collect():
+	# 	print(row)
+	# input()
+
+	# for row in mapped2.collect():
+	# 	print(row)
+	# input()
+
+	return mapped1.join(mapped2).map(lambda q: [ele for tup in q[1] for ele in tup])
+
+def leftJoinRDDAction(sql, selectColumns, rdd1, rdds):
+	table1 = getFromTableName(sql)
+	table2 = sql[sql.find("JOIN")+5:].split(" ")[0]
+
+	table1ColumnON = getJoinColumns(sql, table1)
+	table2ColumnON = getJoinColumns(sql, table2)
+
+	selectColumns1 = getSelectJoinColumns(table1, selectColumns)
+	selectColumns2 = getSelectJoinColumns(table2, selectColumns)
 
 	rdd2 = fromRDDAction(table2, rdds)
 
-	mapped1 = 
-
-	return
+	mapped1 = rdd1.map(lambda row: (row[columnNumbers[table1].index(table1ColumnON)], tuple([row[columnNumbers[table1].index(i)] for i in selectColumns1])))
+	mapped2 = rdd2.map(lambda row: (row[columnNumbers[table2].index(table2ColumnON)], tuple([row[columnNumbers[table2].index(i)] for i in selectColumns2])))
+	
+	return mapped1.leftOuterJoin(mapped2).map(lambda q: [ele for tup in q[1] for ele in tup])
 
 def getJoinColumns(sql, tableName):
 	sql = sql[sql.find("ON") + 3:]
