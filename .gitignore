@@ -1,2 +1,3 @@
-tmp/
+tmp/*
 system/mapreduce
+src/mapreduce/classes/*

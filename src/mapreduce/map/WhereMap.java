@@ -51,6 +51,7 @@ public class WhereMap extends Mapper<LongWritable, Text, Text, Text> {
 					doesItSatisfy = Pattern.compile(clause.get(2)).matcher(columnValue).matches();
 					break;
 				case "IN":
+					doesItSatisfy = Parser.testInCondition(columnValue, clause.get(2));
 					break;
 			}
 

@@ -75,6 +75,7 @@ public class JoinReduce extends Reducer<Text,Text,Text,Text>{
 						ret.add("NULL");
 					}
 				}
+				context.write(new Text(FormatConvertor.ListToCSV(ret)), new Text(FormatConvertor.ListToCSV(ret)));
 			}
 		}
 	} 

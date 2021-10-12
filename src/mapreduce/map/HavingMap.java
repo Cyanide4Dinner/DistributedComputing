@@ -45,7 +45,8 @@ public class HavingMap extends Mapper<Text, Text, Text, Text> {
 					break;
 			}
 
-			if(doesItSatisfy) context.write(key, value);
+			//if(doesItSatisfy) context.write(key, value);
+			if(doesItSatisfy) context.write(key, new Text(key.toString()+","+value.toString()));
 		}
 		else{
 			String line = key.toString();
@@ -79,10 +80,12 @@ public class HavingMap extends Mapper<Text, Text, Text, Text> {
 					doesItSatisfy = Pattern.compile(clause.get(2)).matcher(columnValue).matches();
 					break;
 				case "IN":
+					doesItSatisfy = Parser.testInCondition(columnValue, clause.get(2));
 					break;
 			}
 
-			if(doesItSatisfy) context.write(key, value);
+			//if(doesItSatisfy) context.write(key, value);
+			if(doesItSatisfy) context.write(key, new Text(key.toString()+","+value.toString()));
 		}
 	}
 }

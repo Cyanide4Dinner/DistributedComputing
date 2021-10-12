@@ -180,19 +180,15 @@ public class Parser {
 			else return 3;
 		}
 		return 1;
-}
+	}
+
+	public static boolean testInCondition(String columnValue, String inCondition){
+		ArrayList<String> inValues = new ArrayList(Arrays.asList(inCondition.substring(1,inCondition.length()-1).split(",")));	
+		return inValues.contains(columnValue);
+	}
 
 	public static void main(String[] args){
- 		String query = "SELECT occupation, gender FROM Users WHERE age > 20 INNER JOIN Zipcodes ON Users.zipcode = Zipcodes.zipcode";
-		ArrayList<String> a = getJoinColumnTable1(query);
-		ArrayList<String> b = getJoinColumnTable2(query);
-		System.out.println(a.size());
-		//System.out.println("+"+a.get(1).substring(0,a.get(1).indexOf("."))+"+");
-		for(int i=0; i<2; i++){
-			System.out.println("+"+a.get(i)+"+");
-		}
-		for(int i=0; i<2; i++){
-			System.out.println("+"+b.get(i)+"+");
-		}
+ 		//String query = "SELECT occupation, gender FROM Users WHERE age > 20 LEFT OUTER JOIN Zipcodes ON Users.zipcode = Zipcodes.zipcode";
+		System.out.println(testInCondition("badminton","{soccer,basketball,chess}"));
 	}
 }

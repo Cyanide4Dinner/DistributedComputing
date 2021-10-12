@@ -25,7 +25,7 @@ import org.apache.hadoop.util.ToolRunner;
 public class SQL extends Configured implements Tool {
 
 	//public static String EXAMPLE_SQL = "SELECT occupation, gender, AVG(age) FROM Users WHERE age > 20 GROUP BY occupation, gender HAVING gender LIKE M";
-	public static String EXAMPLE_SQL = "SELECT Users.occupation, Users.gender, Zipcodes.city FROM Users WHERE age > 20 LEFT OUTER JOIN Zipcodes ON Users.zipcode = Zipcodes.zipcode";
+	//public static String EXAMPLE_SQL = "SELECT Users.occupation, Users.gender, Zipcodes.city FROM Users WHERE age > 20 LEFT OUTER JOIN Zipcodes ON Users.zipcode = Zipcodes.zipcode";
 	//public static String EXAMPLE_SQL = "SELECT occupation, gender FROM Users WHERE age > 20 NATURAL JOIN Zipcodes";
 
 	public static void main(String args[]) throws Exception {
@@ -34,6 +34,8 @@ public class SQL extends Configured implements Tool {
 
 	public int run(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 		
+		String EXAMPLE_SQL = args[0];
+
 		Configuration conf = this.getConf();
 
 		conf.set("query", EXAMPLE_SQL);
@@ -150,7 +152,7 @@ public class SQL extends Configured implements Tool {
 			job.setReducerClass(JoinReduce.class);
 		}
 
-		FileOutputFormat.setOutputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
 		return job.waitForCompletion(true) ? 0 : 1;
 	}
