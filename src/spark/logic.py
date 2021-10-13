@@ -58,7 +58,7 @@ columnNumbers = {
 		}
 
 def parseAndExecute(sql, rdds):
-	if "(" in sql[:sql.find("FROM")]:
+	if "(" in sql[:sql.find(" FROM ")]:
 		selectAggregated, sql = getSelectAggregate(sql)
 
 	selectFromColumns = getSelectColumns(sql)

@@ -44,6 +44,7 @@ EXAMPLE_SQL = "SELECT Users.age, Rating.rating, Rating.movieid FROM Users WHERE 
 EXAMPLE_SQL = "SELECT Users.userid, Users.zipcode, Zipcodes.city FROM Users WHERE age > 20 LEFT JOIN Zipcodes ON Users.zipcode = Zipcodes.zipcode"
 result = parseAndExecute(EXAMPLE_SQL, [moviesRDD, ratingRDD, usersRDD, zipcodesRDD])
 result = result.collect()
+print(type(result))
 for row in result:
     for element in row:
         print(element, " ", end="")
