@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+
 	//"html"
 	"bufio"
 	"encoding/json"
@@ -23,6 +25,8 @@ type response_struct struct {
 	Time time.Duration
 	Data [][]string
 }
+
+var c chan []byte
 
 func mr_txt2list() [][]string {
 	f, _ := os.Open("../tmp/output.txt")
@@ -62,18 +66,58 @@ func mapreduce(rw http.ResponseWriter, req *http.Request) {
 }
 
 func spark(rw http.ResponseWriter, req *http.Request) {
-	// body, _ := ioutil.ReadAll(req.Body)
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(string(body))
+	var q query_struct
+	err = json.Unmarshal(body, &q)
+	if err != nil {
+		panic(err)
+	}
 
-	// var q query_struct
-	// err = json.Unmarshal(body, &q)
+	log.Println(q.Exec, " ", q.Query)
+	query := map[string]string{"query": q.Query}
+	respb, _ := json.Marshal(query)
+
+	resp, err := http.Post("http://127.0.0.1:5000/", "application/json", bytes.NewBuffer(respb))
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ = ioutil.ReadAll(resp.Body)
+	rw.Write(body)
 }
 
-func main() {
+func spark_json(rw http.ResponseWriter, req *http.Request) {
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		panic(err)
+	}
+	// log.Println(string(body))
+	c := make(chan []byte)
+	go func() {
+		fmt.Println(string(<-c))
+		time.Sleep(1000 * time.Millisecond)
+	}()
+	c <- body
+
+}
+
+func init() {
 	http.HandleFunc("/mapreduce", mapreduce)
 
 	http.HandleFunc("/hi", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hi")
 	})
+
+	http.HandleFunc("/spark", spark)
+	http.HandleFunc("/spark_json", spark_json)
+}
+
+func main() {
 
 	log.Fatal(http.ListenAndServe(":5555", nil))
 }

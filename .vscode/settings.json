@@ -1,5 +1,0 @@
-{
-    "python.pythonPath": "/home/icecream/.msvscode.hdinsight/hdinsightJupyter/bin/python",
-    "python.defaultInterpreterPath": "/home/icecream/.msvscode.hdinsight/hdinsightJupyter/bin/python",
-    "jupyter.jupyterLaunchTimeout": 240000
-}

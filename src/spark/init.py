@@ -2,9 +2,13 @@ from pyspark.conf import SparkConf
 from pyspark.sql import SparkSession
 from subprocess import check_output
 from pyspark import SparkFiles
-import collections
-import random
+from flask import Flask, request
 import csv
+import sys
+import json
+import time
+import requests
+
 
 HOST_IP = "192.168.1.13"
 
@@ -39,14 +43,19 @@ zipcodesRDD = loadIntoRDD("zipcodes")
 
 from logic import parseAndExecute
 
-EXAMPLE_SQL = "SELECT COUNT(occupation), gender, age FROM Users WHERE age > 20 GROUP BY gender, age HAVING COUNT(occupation) > 5"
-EXAMPLE_SQL = "SELECT Users.age, Rating.rating, Rating.movieid FROM Users WHERE age > 20 INNER JOIN Rating ON Users.userid = Rating.userid"
+# EXAMPLE_SQL = "SELECT COUNT(occupation), gender, age FROM Users WHERE age > 20 GROUP BY gender, age HAVING COUNT(occupation) > 5"
+# EXAMPLE_SQL = "SELECT Users.age, Rating.rating, Rating.movieid FROM Users WHERE age > 20 INNER JOIN Rating ON Users.userid = Rating.userid"
 EXAMPLE_SQL = "SELECT Users.userid, Users.zipcode, Zipcodes.city FROM Users WHERE age > 20 LEFT JOIN Zipcodes ON Users.zipcode = Zipcodes.zipcode"
-result = parseAndExecute(EXAMPLE_SQL, [moviesRDD, ratingRDD, usersRDD, zipcodesRDD])
-result = result.collect()
-print(type(result))
-for row in result:
-    for element in row:
-        print(element, " ", end="")
 
-    print()
+app = Flask(__name__)
+@app.route('/', methods=['POST'])
+def run():
+    start_time = time.time()
+    query = request.json
+    result = parseAndExecute(query['query'], [moviesRDD, ratingRDD, usersRDD, zipcodesRDD])
+    result = result.collect()
+    elapsed_time = time.time() - start_time
+    return json.dumps({"Time": elapsed_time, "Data": result})
+
+if __name__ == '__main__':
+    app.run(port=5000)

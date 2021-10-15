@@ -70,8 +70,8 @@ def parseAndExecute(sql, rdds):
 		whereColumn, relate, value = getWhereCondition(sql)
 		curr = whereRDDAction(whereColumn, relate, value, fromTableName, curr)
 
-	for row in curr.collect():
-		print(row)
+	# for row in curr.collect():
+	# 	print(row)
 		
 	if " JOIN " in sql:
 		if (" LEFT " in sql):
